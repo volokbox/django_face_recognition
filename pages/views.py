@@ -96,3 +96,67 @@ def face_recognition(request):
     return default_page(request)
 
 
+
+def take_photos(request):
+        # count faces in the db
+        # Assuming the "images" directory is in the same directory as your current Python file
+        image_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'images') 
+        count = 0
+
+        for path in os.listdir(image_path):
+            # check if current path is a file
+            if os.path.isfile(os.path.join(image_path, path)):
+                count += 1
+
+        # if count equals zero, then faces = 0
+        if(count != 0):
+            faces = count/100
+        else:
+            faces = 0
+
+        # Check if folder exists
+        if not os.path.exists('images'):
+            os.makedirs('images')
+
+        face_cascade_Path = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'haarcascade_frontalface_default.xml')
+        faceCascade = cv2.CascadeClassifier(face_cascade_Path)
+
+        # Check if the cascade was loaded successfully
+        if faceCascade.empty():
+            print("Error: Could not load the face cascade.")
+            return HttpResponseServerError("Internal Server Error: Could not load the face cascade.")
+        
+        cam = cv2.VideoCapture(0)
+        cam.set(3,640)
+        cam.set(4,480)
+        count = 0
+
+        
+        # For each person, enter one unique numeric face id
+        face_id = faces + 1
+
+        while(True):
+            ret, img = cam.read()
+            gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
+            faces = faceCascade.detectMultiScale(gray, scaleFactor=1.3, minNeighbors=5)
+            for (x,y,w,h) in faces:
+                cv2.rectangle(img, (x,y), (x+w,y+h), (255,0,0), 2)
+                count += 1
+                # Save the captured image into the images directory
+                cv2.imwrite("./images/Users." + str(face_id) + '.' + str(count) + ".jpg", gray[y:y+h,x:x+w])
+                cv2.imshow('image', img)
+            # Press Escape to end the program.
+            k = cv2.waitKey(100) & 0xff
+            if k < 100:
+                break
+            # Take 30 face samples and stop video. You may increase or decrease the number of
+            # images. The more the better while training the model.
+            elif count >= 100:
+                break
+
+        cam.release()
+        cv2.destroyAllWindows()
+
+        return HttpResponse("Photos taken successfully")
+
+
