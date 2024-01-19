@@ -1,5 +1,5 @@
 from django.shortcuts import render
-from django.http import StreamingHttpResponse, HttpResponse
+from django.http import StreamingHttpResponse, HttpResponse, HttpResponseServerError
 from django.views.decorators import gzip
 import cv2
 import os
@@ -11,7 +11,7 @@ def default_page(request):
 
 # Página do Reconhecimento facial
 def face_recognition(request):
-    # atrinuit reconhecimento facial ao recognizer
+    # Atribuir o reconhecimento facial ao recognizer
     recognizer = cv2.face.LBPHFaceRecognizer_create()
 
     # Abrir ficheiro treinado
@@ -26,11 +26,12 @@ def face_recognition(request):
     font = cv2.FONT_HERSHEY_SIMPLEX
 
     id = 0
-    # names related to ids: The names associated to the ids: 1 for Mohamed, 2 for Jack, etc...
+
     #aluno = []
     #mycursor.execute("select nome from Aluno")
     #for i in mycursor:
     #    aluno += i
+
     names = ['None', 'Jose Conde', 'Barreto', 'Volodymyr'] # add a name into this list
 
     # Taxa de presença
@@ -39,7 +40,7 @@ def face_recognition(request):
     # Captura de Video
     cam = cv2.VideoCapture(0)
 
-    # Resolução do Video
+    # Resolução do Video 16:9
     cam.set(3, 853) 
     cam.set(4, 480)
     
@@ -96,67 +97,89 @@ def face_recognition(request):
     return default_page(request)
 
 
-
+# Página para tirar fotografias das caras
 def take_photos(request):
-        # count faces in the db
-        # Assuming the "images" directory is in the same directory as your current Python file
+        # Contar número de fotogradias na pasta  
+        # Encontrar a pasta das imagens das caras
         image_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'images') 
         count = 0
 
+        # Para caminho na pasta        
         for path in os.listdir(image_path):
-            # check if current path is a file
+            # Verifica se o caminho atual for um ficheiro
             if os.path.isfile(os.path.join(image_path, path)):
-                count += 1
+                count += 1    # Caso sim, adiciona um valor ao contador dos ficheiros
 
-        # if count equals zero, then faces = 0
+        # Se contador for igual a zero, assume-se que não há caras
+        # Se não, o número de caras descobre-se através da divisão da variável count por 100
+        # visto que para cada cara, são tiradas 100 fotografias de cada vez
         if(count != 0):
             faces = count/100
         else:
             faces = 0
 
-        # Check if folder exists
+
+        os.chdir('pages') # Ir para o ficheiro pages
+
+        # Verifica se a pasta existe
         if not os.path.exists('images'):
             os.makedirs('images')
 
+
+        # Abrir haarcascade ficherio
         face_cascade_Path = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'haarcascade_frontalface_default.xml')
         faceCascade = cv2.CascadeClassifier(face_cascade_Path)
 
-        # Check if the cascade was loaded successfully
+        # Veririca se o haarcascade foi aberto
         if faceCascade.empty():
-            print("Error: Could not load the face cascade.")
-            return HttpResponseServerError("Internal Server Error: Could not load the face cascade.")
+            print("Erro: Não foi possível abrir o ficheiro haarcascade.")
+            return HttpResponseServerError("Internal Server Erro: Não foi possível abrir o ficheiro haarcascade.")
         
+        # Captura de Vídeo
         cam = cv2.VideoCapture(0)
-        cam.set(3,640)
-        cam.set(4,480)
-        count = 0
 
+        # Resolução do Vídeo 16:9
+        cam.set(3,853)
+        cam.set(4,480)
+
+        # Atualizar variavel count
+        count = 0
         
-        # For each person, enter one unique numeric face id
+        # Para cada pessoa cria-se um face_id único
         face_id = faces + 1
 
         while(True):
+            # Capturar um frame da camara
             ret, img = cam.read()
+
+            # Converte a imagem para escala de cinza, para o reconhecimento facial ser executado corretamente
             gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
+
+            # Detetar cara no frame
             faces = faceCascade.detectMultiScale(gray, scaleFactor=1.3, minNeighbors=5)
             for (x,y,w,h) in faces:
+                # Desenhar um retângulo à volta da cara detetada
                 cv2.rectangle(img, (x,y), (x+w,y+h), (255,0,0), 2)
                 count += 1
-                # Save the captured image into the images directory
+
+                # Guardar a imagem capturada na pasta 'images'
                 cv2.imwrite("./images/Users." + str(face_id) + '.' + str(count) + ".jpg", gray[y:y+h,x:x+w])
+
+                # Meter em Full Screen o Tirar Fotografias
+                cv2.namedWindow("image", cv2.WND_PROP_FULLSCREEN)
+                cv2.setWindowProperty("image", cv2.WND_PROP_FULLSCREEN, cv2.WINDOW_FULLSCREEN)
                 cv2.imshow('image', img)
-            # Press Escape to end the program.
+
+            # Escape para sair da janela
             k = cv2.waitKey(100) & 0xff
             if k < 100:
                 break
-            # Take 30 face samples and stop video. You may increase or decrease the number of
-            # images. The more the better while training the model.
+            # Capturar 100 amostras de cara e parar o vídeo. Pode-se aumentar ou diminuir o número de
+            # imagens. Quanto mais, melhor ao treinar o modelo.
             elif count >= 100:
                 break
 
         cam.release()
         cv2.destroyAllWindows()
 
-        return HttpResponse("Photos taken successfully")
-
-
+        return HttpResponse("Fotografias foram tiradas com sucesso!")
