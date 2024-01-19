@@ -4,6 +4,8 @@ from django.views.decorators import gzip
 import cv2
 import os
 from screeninfo import get_monitors
+from PIL import Image
+import numpy as np
 
 # Página por defeito
 def default_page(request):
@@ -184,6 +186,8 @@ def take_photos(request):
 
         return HttpResponse("Fotografias foram tiradas com sucesso!")
 
+
+# Página para criar ficheiro treinado 
 def train_photos(request):
     #Directory path name where the face images are stored.
     path = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'images')
@@ -209,7 +213,11 @@ def train_photos(request):
         return faceSamples, ids
     faces,ids = getImagesAndLabels(path)
     recognizer.train(faces, np.array(ids))
+
+    
     # Save the model into the current directory.
-    recognizer.write('trainer.yml')
+    folder = os.path.dirname(os.path.abspath(__file__))
+    trained_file_path = os.path.join(folder, 'trainer.yml')
+    recognizer.write(trained_file_path)
 
     return HttpResponse("Photos treinadas")
