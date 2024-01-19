@@ -183,3 +183,33 @@ def take_photos(request):
         cv2.destroyAllWindows()
 
         return HttpResponse("Fotografias foram tiradas com sucesso!")
+
+def train_photos(request):
+    #Directory path name where the face images are stored.
+    path = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'images')
+
+    recognizer = cv2.face.LBPHFaceRecognizer_create() 
+    #Haar cascade file
+    cascade = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'haarcascade_frontalface_default.xml')  # get current directory
+    detector = cv2.CascadeClassifier(cascade)
+
+    def getImagesAndLabels(path):
+        imagePaths = [os.path.join(path,f) for f in os.listdir(path)]
+        faceSamples=[]
+        ids = []
+        for imagePath in imagePaths:
+            # convert it to grayscale
+            PIL_img = Image.open(imagePath).convert('L')
+            img_numpy = np.array(PIL_img,'uint8')
+            id = int(os.path.split(imagePath)[-1].split(".")[1])
+            faces = detector.detectMultiScale(img_numpy)
+            for (x,y,w,h) in faces:
+                faceSamples.append(img_numpy[y:y+h,x:x+w])
+                ids.append(id)
+        return faceSamples, ids
+    faces,ids = getImagesAndLabels(path)
+    recognizer.train(faces, np.array(ids))
+    # Save the model into the current directory.
+    recognizer.write('trainer.yml')
+
+    return HttpResponse("Photos treinadas")
