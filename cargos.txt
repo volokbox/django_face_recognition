@@ -1,0 +1,3 @@
+barreto: turma aluno curso
+volo: escola professor sala
+juntos: horario falta
