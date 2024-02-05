@@ -1,0 +1,23 @@
+{% extends 'base.html' %}
+
+{% block content %}
+    <br><br>
+    <h1>Professor</h1>
+
+    <br><br>
+
+    <form method="POST" action="{% url 'professor' %}">
+    {% csrf_token %}
+        <div class="form-group">
+            <input type="text" class="form-control" placeholder="ID_Professor" name="ID_Professor">
+        </div>
+        <div class="form-group">
+            <input type="text" class="form-control" placeholder="ID_Escola" name="ID_Escola">
+        </div>
+        <div class="form-group">
+            <input type="text" class="form-control" placeholder="Nome" name="Nome">
+        </div>
+        <button type="submit" class="btn btn-secondary">Inserir</button>
+    </form>
+
+{% endblock %}

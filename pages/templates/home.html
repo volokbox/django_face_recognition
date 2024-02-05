@@ -3,13 +3,26 @@
 
 {% block content %}
 
-<h1>Members Database</h1>
+<h1>Base de Dados</h1>
 
+<h2>Escola</h2>
+{% for item in escola %}
+    <strong>{{ item.ID_Escola }} - {{ item.Nome }}<br> </strong>
+    Agrupamento: {{ item.Agrupamento }} <br>
+    Localizacao: {{ item.Localizacao }} <br> <br>
+    <hr>
+{% endfor %}
 
-{% for item in all %}
-    <strong>{{ item.fname }} {{ item.lname }}<br> </strong>
-    Email: {{ item.email }} <br>
-    Age: {{ item.age }} <br> <br>
+<h2>Professor</h2>
+{% for item in professor %}
+    <strong>{{ item.ID_Professor }} - {{ item.Nome }}<br> </strong>
+    ID_Escola: {{ item.ID_Escola }} <br> <br>
+    <hr>
+{% endfor %}
+
+<h2>Sala</h2>
+{% for item in sala %}
+    <strong>{{ item.ID_Sala }} - {{ item.Nome_Sala }}<br> </strong>
     <hr>
 {% endfor %}
 

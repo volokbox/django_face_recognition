@@ -1,22 +1,15 @@
 from django.db import models
 
-# Create your models here.
-class Member(models.Model):
-    fname = models.CharField(max_length=50)
-    lname = models.CharField(max_length=100)
-    email = models.EmailField(max_length=200)
-    passwd = models.CharField(max_length=50) 
-    age = models.IntegerField()
-
-    def __str__(self):
-        return self.fname + ' ' + self.lname
-
 # Tabela Escola
 class Escola(models.Model):
     ID_Escola = models.BigAutoField(primary_key=True)
     Nome = models.CharField(max_length = 150)
     Agrupamento = models.CharField(max_length = 150)
     Localizacao = models.CharField(max_length = 100)
+
+    def __str__(self):          # Obejct (1)...
+        return str(self.ID_Escola)
+
 
 # Tabela Curso
 class Curso(models.Model):
